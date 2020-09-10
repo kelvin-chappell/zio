@@ -456,6 +456,15 @@ object ZIOSpec extends ZIOBaseSpec {
           effects <- ref.get.map(_.reverse)
         } yield assert(results)(equalTo(List(2, 4, 6, 6))) &&
           assert(effects)(equalTo(List(2, 4, 6, 3, 5, 6)))
+      },
+      testM("filters a set using an effectual predicate") {
+        val as = Set(2, 3, 4, 5, 6, 7)
+        for {
+          ref     <- Ref.make(Set.empty[Int])
+          results <- ZIO.filter(as)(a => ref.update(_ + a).as(a % 2 == 0))
+          effects <- ref.get.map(_.map(_ + 1))
+        } yield assert(results)(equalTo(Set(2, 4, 6))) &&
+          assert(effects)(equalTo(Set(3, 4, 5, 6, 7, 8)))
       }
     ),
     suite("filterPar")(
